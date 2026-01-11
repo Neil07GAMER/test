@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Army of Teachers | Interactive Portal</title>
+    <style>
+        /* --- 1. CORE THEME & ANIMATIONS --- */
+        :root {
+            --primary: #2962ff;
+            --primary-glow: rgba(41, 98, 255, 0.6);
+            --bg: #050505;
+            --surface: #121212;
+            --text: #ffffff;
+            --gray: #a0a0a0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 15% 50%, rgba(41, 98, 255, 0.08) 0%, transparent 25%), 
+                              radial-gradient(circle at 85% 30%, rgba(41, 98, 255, 0.05) 0%, transparent 25%);
+        }
+
+        /* Smooth Fade In Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px var(--primary-glow); }
+            50% { box-shadow: 0 0 20px var(--primary-glow), 0 0 10px var(--primary); }
+            100% { box-shadow: 0 0 5px var(--primary-glow); }
+        }
+
+        /* --- 2. NAVIGATION --- */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo { height: 50px; width: 50px; border-radius: 50%; border: 2px solid var(--primary); margin-right: 15px; object-fit: cover; }
+        .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* --- 3. VIEW UTILITIES --- */
+        .view-section {
+            display: none;
+            flex: 1;
+            padding: 40px 20px;
+            flex-direction: column;
+            align-items: center;
+        }
+        .active-view { display: flex; animation: fadeInUp 0.8s ease; }
+
+        /* --- 4. REGISTRATION FORM --- */
+        .hero-text { text-align: center; margin-bottom: 30px; max-width: 600px; }
+        h1 { font-size: 3rem; margin-bottom: 10px; font-weight: 800; }
+        .highlight { 
+            background: linear-gradient(90deg, #2962ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-card {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: transform 0.3s;
+        }
+        .form-card:hover { transform: translateY(-5px); }
+
+        input, select {
+            width: 100%; padding: 15px; margin-bottom: 20px;
+            background: #0a0a0a; border: 1px solid #333; color: white;
+            border-radius: 10px; font-size: 1rem; transition: 0.3s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px rgba(41,98,255,0.2); }
+
+        .btn {
+            width: 100%; padding: 15px; 
+            background: linear-gradient(45deg, var(--primary), #0039cb);
+            color: white; border: none; border-radius: 10px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; 
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
+
+        /* --- 5. DASHBOARD & CARDS --- */
+        .grid-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 25px;
+            max-width: 1000px; width: 100%; margin-top: 20px;
+        }
+
+        .card {
+            background: var(--surface); border: 1px solid #222;
+            width: 200px; padding: 30px 20px; border-radius: 15px;
+            text-align: center; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+        }
+
+        /* Hover Effect: The card lifts and glows */
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(41, 98, 255, 0.15);
+        }
+
+        /* Active Effect: When a class is selected */
+        .card.active-card {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+            background: rgba(41,98,255,0.05);
+        }
+
+        .card-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 5px; }
+        .card-sub { font-size: 0.8rem; color: #666; }
+
+        /* --- 6. CONTENT SECTIONS --- */
+        .content-container {
+            width: 100%; max-width: 900px;
+            margin-top: 40px; border-top: 1px solid #333; padding-top: 30px;
+            display: none; animation: fadeInUp 0.5s ease;
+        }
+        
+        .pdf-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        
+        .pdf-box {
+            background: #0f0f0f; border: 1px solid #333;
+            padding: 25px; border-radius: 12px; width: 280px; text-align: center;
+            transition: 0.3s;
+        }
+        .pdf-box:hover { border-color: var(--primary); transform: translateY(-5px); }
+        
+        .download-link {
+            display: inline-block; margin-top: 15px; padding: 10px 25px;
+            background: transparent; color: var(--primary); 
+            border: 2px solid var(--primary); text-decoration: none;
+            border-radius: 50px; font-size: 0.9rem; font-weight: bold;
+            transition: 0.3s;
+        }
+        .download-link:hover { background: var(--primary); color: white; }
+
+        /* Back Button */
+        .back-btn {
+            background: none; border: none; color: var(--gray);
+            cursor: pointer; margin-bottom: 20px; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .back-btn:hover { color: white; }
+
+        /* --- 7. MODAL --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 999;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: #151515; padding: 50px; border-radius: 20px;
+            border: 1px solid #333; text-align: center; max-width: 400px;
+            animation: fadeInUp 0.4s ease;
+            box-shadow: 0 0 40px rgba(41,98,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <img src="logo.png" alt="Logo" class="logo">
+        <span class="brand">ARMY OF TEACHERS</span>
+    </nav>
+
+    <div id="view-register" class="view-section active-view">
+        <div class="hero-text">
+            <h1>Start Your <span class="highlight">Journey</span></h1>
+            <p style="color:var(--gray)">Access premium educational resources designed for the future.</p>
+        </div>
+
+        <div class="form-card">
+            <form id="regForm">
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="tel" id="phone" placeholder="Phone Number" required>
+                <select id="class" required>
+                    <option value="" disabled selected>Select Your Class</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                </select>
+                <button type="submit" class="btn" id="subBtn">Register Now</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-dashboard" class="view-section">
+        <div style="width:100%; max-width:1000px; display:flex; justify-content:space-between; align-items:center;">
+            <h2>Student Dashboard</h2>
+            <span id="welcomeName" style="color:var(--primary); font-weight:bold;">Student</span>
+        </div>
+        
+        <p style="color:var(--gray); margin-bottom:30px; margin-top:10px;">Select your academic level</p>
+
+        <div class="grid-container" id="main-grid">
+            
+            <div class="card" onclick="openJuniorSelection()">
+                <div class="card-title">6 - 8</div>
+                <div class="card-sub">Junior Section</div>
+            </div>
+
+            <div class="card" onclick="openClass9()" id="card9">
+                <div class="card-title">Class 9</div>
+                <div class="card-sub">Senior Section</div>
+            </div>
+
+            <div class="card" onclick="alert('Coming Soon!')">
+                <div class="card-title">Class 10</div>
+                <div class="card-sub">Board Prep</div>
+            </div>
+
+            <div class="card" onclick="alert('Coming Soon!')">
+                <div class="card-title">11 - 12</div>
+                <div class="card-sub">College Prep</div>
+            </div>
+        </div>
+
+        <div class="grid-container" id="junior-grid" style="display:none;">
+            <div style="width:100%; text-align:left; padding-left:20px;">
+                <button class="back-btn" onclick="goBackToMain()">← Back to all classes</button>
+            </div>
+
+            <div class="card" onclick="openJuniorPDF(6)">
+                <div class="card-title">Class 6</div>
+                <div class="card-sub">View Files</div>
+            </div>
+
+            <div class="card" onclick="openJuniorPDF(7)">
+                <div class="card-title">Class 7</div>
+                <div class="card-sub">View Files</div>
+            </div>
+
+            <div class="card" onclick="openJuniorPDF(8)">
+                <div class="card-title">Class 8</div>
+                <div class="card-sub">View Files</div>
+            </div>
+        </div>
+
+        <div id="content-junior" class="content-container">
+            <h3 style="margin-bottom:20px; text-align:center;">Junior Study Material</h3>
+            <div class="pdf-row">
+                <div class="pdf-box">
+                    <h4>📚 Combined Resource</h4>
+                    <p style="font-size:0.8rem; color:#888; margin:10px 0;">Complete Syllabus Guide</p>
+                    <a href="downloads/6-8.pdf" target="_blank" class="download-link">Download PDF</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-9" class="content-container">
+            <h3 style="margin-bottom:20px; text-align:center;">Class 9 Resources</h3>
+            <div class="pdf-row">
+                <div class="pdf-box">
+                    <h4>🧪 Science</h4>
+                    <p style="font-size:0.8rem; color:#888; margin:10px 0;">Matter in Our Surroundings</p>
+                    <a href="downloads/science9.pdf" target="_blank" class="download-link">View PDF</a>
+                </div>
+                <div class="pdf-box">
+                    <h4>📐 Mathematics</h4>
+                    <p style="font-size:0.8rem; color:#888; margin:10px 0;">Number Systems</p>
+                    <a href="downloads/maths9.pdf" target="_blank" class="download-link">View PDF</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-box">
+            <div style="font-size:50px; margin-bottom:20px;">🎉</div>
+            <h2 style="color:white; margin-bottom:10px;">Welcome Aboard!</h2>
+            <p style="color:#aaa; margin-bottom:20px;">You are now a registered member.</p>
+            <button class="btn" onclick="enterDashboard()">Enter Portal</button>
+        </div>
+    </div>
+
+    <script>
+        let userClass = "";
+
+        // 1. REGISTRATION LOGIC
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('subBtn');
+            const name = document.getElementById('name').value;
+            userClass = document.getElementById('class').value;
+            
+            // Set Name in Dashboard
+            document.getElementById('welcomeName').innerText = name;
+
+            // Fake Loading Animation
+            btn.innerHTML = "Connecting to Server...";
+            btn.style.background = "#333";
+            
+            setTimeout(() => {
+                document.getElementById('successModal').style.display = 'flex';
+                btn.innerHTML = "Register Now";
+                btn.style.background = ""; // Reset color
+            }, 1000);
+        });
+
+        // 2. ENTER DASHBOARD
+        function enterDashboard() {
+            document.getElementById('successModal').style.display = 'none';
+            document.getElementById('view-register').classList.remove('active-view');
+            document.getElementById('view-dashboard').classList.add('active-view');
+
+            // Auto-navigate based on selection
+            if(userClass === "9") {
+                openClass9();
+            } else if (["6", "7", "8"].includes(userClass)) {
+                openJuniorSelection();
+            }
+        }
+
+        // 3. NAVIGATION FUNCTIONS
+        
+        // Show Junior (6-8) Grid
+        function openJuniorSelection() {
+            hideAllContent();
+            document.getElementById('main-grid').style.display = 'none';
+            document.getElementById('junior-grid').style.display = 'flex';
+            // Animation for grid appearance
+            document.getElementById('junior-grid').style.animation = 'fadeInUp 0.5s ease';
+        }
+
+        // Go Back to Main Grid
+        function goBackToMain() {
+            hideAllContent();
+            document.getElementById('junior-grid').style.display = 'none';
+            document.getElementById('main-grid').style.display = 'flex';
+        }
+
+        // Open Junior PDF (Same file for 6, 7, 8 as requested)
+        function openJuniorPDF(cls) {
+            hideAllContent();
+            // Optional: You could change the title dynamically
+            // document.querySelector('#content-junior h3').innerText = "Class " + cls + " Material";
+            const section = document.getElementById('content-junior');
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Open Class 9 Section
+        function openClass9() {
+            // If we are in junior view, hide it? No, Class 9 is in main grid.
+            hideAllContent();
+            const section = document.getElementById('content-9');
+            section.style.display = 'block';
+            
+            // Highlight the card
+            document.getElementById('card9').classList.add('active-card');
+            
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Helper to reset view
+        function hideAllContent() {
+            document.getElementById('content-junior').style.display = 'none';
+            document.getElementById('content-9').style.display = 'none';
+            
+            // Remove active class from cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(c => c.classList.remove('active-card'));
+        }
+
+    </script>
+</body>
+</html>
